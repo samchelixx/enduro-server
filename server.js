@@ -29,8 +29,7 @@ async function syncFromGist() {
         const content = data.files['enduro_db.json']?.content;
         if (content) {
             db = JSON.parse(content);
-            if (!db.friends) db.friends = [];
-            if (!db.shared_routes) db.shared_routes = {};
+            ensureCollections();
             console.log('БД успешно загружена из Gist');
         }
     } catch (e) {
@@ -67,10 +66,17 @@ if (fs.existsSync(DB_FILE) && !GIST_ID) {
     syncFromGist();
 }
 
-if (!db.friends) db.friends = [];
-if (!db.shared_routes) db.shared_routes = {};
+// Защита от пустого {} в Gist
+function ensureCollections() {
+    if (!db.users) db.users = [];
+    if (!db.map_data) db.map_data = {};
+    if (!db.friends) db.friends = [];
+    if (!db.shared_routes) db.shared_routes = {};
+}
+ensureCollections();
 
 function saveDb() {
+    ensureCollections();
     fs.writeFileSync(DB_FILE, JSON.stringify(db), 'utf8');
     syncToGist(); // Асинхронно пушим в облако
 }
